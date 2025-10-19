@@ -28,7 +28,7 @@ actor MatchStore {
     }
 }
 
-struct Match {
+struct Match: Hashable {
     let matchID: Int
     let startTime: Date
     let teamA: String
