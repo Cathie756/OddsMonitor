@@ -16,7 +16,7 @@ struct MatchResponse {
 }
 
 // GET /odds
-struct OddResponse {
+struct OddsResponse {
     let matchID: Int
     let teamAOdds: Double
     let teamBOdds: Double

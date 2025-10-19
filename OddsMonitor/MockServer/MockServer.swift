@@ -7,8 +7,15 @@
 
 import Foundation
 
+protocol WebSocketDelegate: AnyObject {
+    func didReceive(updatedOdds: OddsResponse)
+}
+
 class MockServer {
     static let shared = MockServer()
+
+    private var timer: Timer?
+    private weak var delegate: WebSocketDelegate?
     
     func getMatches() async throws -> [MatchResponse] {
         let delayTime = UInt64.random(in: 100...300) * 1000 * 1000
@@ -17,13 +24,28 @@ class MockServer {
         return matches
     }
     
-    func getOdds() async throws -> [OddResponse] {
+    func getOdds() async throws -> [OddsResponse] {
         let delayTime = UInt64.random(in: 100...300) * 1000 * 1000
         try await Task.sleep(nanoseconds: delayTime)
         let odds = generateOriginalOddData()
         return odds
     }
-
+    
+    func subscribeWebsocket(delegate: WebSocketDelegate) {
+        self.delegate = delegate
+        timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true, block: { [weak self] _ in
+            guard let self else { return }
+            let matchID = Int.random(in: 1001...1100)
+            let newOdds = self.generateOddsMockData(matchID: matchID)
+            NSLog("send update for \(matchID)")
+            self.delegate?.didReceive(updatedOdds: newOdds)
+        })
+    }
+    
+    func unsubscribeWebsocket() {
+        timer?.invalidate()
+        timer = nil
+    }
 }
 
 private extension MockServer {
@@ -61,21 +83,25 @@ private extension MockServer {
 }
 
 private extension MockServer {
-    func generateOriginalOddData() -> [OddResponse] {
+    func generateOriginalOddData() -> [OddsResponse] {
         let firstMatchID = 1001
-        var odds: [OddResponse] = []
+        var odds: [OddsResponse] = []
         for index in 0 ..< Const.dataCount {
             let matchID = firstMatchID + index
-            let teamARate = Double.random(in: 0.2...0.6)
-            let drawRate = Double.random(in: 0.2...0.3)
-            let teamBRate = 1.0 - teamARate - drawRate
-            let teamAOdds = round(1.0 / teamARate * 100) / 100
-            let teamBOdds = round(1.0 / teamBRate * 100) / 100
-            let drawOdds = round(1.0 / drawRate * 100) / 100
-            let odd = OddResponse(matchID: matchID, teamAOdds: teamAOdds, teamBOdds: teamBOdds, drawOdds: drawOdds)
+            let odd = generateOddsMockData(matchID: matchID)
             odds.append(odd)
         }
         return odds
+    }
+    
+    func generateOddsMockData(matchID: Int) -> OddsResponse {
+        let teamARate = Double.random(in: 0.2...0.6)
+        let drawRate = Double.random(in: 0.2...0.3)
+        let teamBRate = 1.0 - teamARate - drawRate
+        let teamAOdds = round(1.0 / teamARate * 100) / 100
+        let teamBOdds = round(1.0 / teamBRate * 100) / 100
+        let drawOdds = round(1.0 / drawRate * 100) / 100
+        return OddsResponse(matchID: matchID, teamAOdds: teamAOdds, teamBOdds: teamBOdds, drawOdds: drawOdds)
     }
 }
 

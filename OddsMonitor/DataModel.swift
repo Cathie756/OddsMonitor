@@ -14,7 +14,7 @@ actor MatchStore {
         self.matches = matches
     }
 
-    func updateOdds(_ newOdds: OddResponse) {
+    func updateOdds(_ newOdds: OddsResponse) {
         guard let index = matches.firstIndex(where: { $0.matchID == newOdds.matchID }) else { return }
         var match = matches[index]
         match.teamAOdds = newOdds.teamAOdds
@@ -37,7 +37,7 @@ struct Match: Hashable {
     var teamBOdds: Double
     var drawOdds: Double
     
-    init(matchResponse: MatchResponse, oddResponse: OddResponse) {
+    init(matchResponse: MatchResponse, oddResponse: OddsResponse) {
         matchID = matchResponse.matchID
         teamA = matchResponse.teamA
         teamB = matchResponse.teamB

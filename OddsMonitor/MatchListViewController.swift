@@ -25,6 +25,16 @@ class MatchListViewController: UIViewController {
         dataBinding()
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        viewModel.subscribeOddsChanges()
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        viewModel.unsubscribeOddsChanges()
+    }
+    
     func setupTableView() {
         tableView.register(UINib(nibName: "\(MatchCell.self)", bundle: nil), forCellReuseIdentifier: "\(MatchCell.self)")
         configureDataSource()
@@ -47,6 +57,7 @@ class MatchListViewController: UIViewController {
 private extension MatchListViewController {
     func configureDataSource() {
         let provider: MatchListDataSource.CellProvider = { tableView, indexPath, match -> UITableViewCell? in
+            NSLog("loading row \(indexPath.row) for matchID: \(match.matchID)")
             guard let cell = tableView.dequeueReusableCell(withIdentifier: "\(MatchCell.self)", for: indexPath) as? MatchCell else {
                 return UITableViewCell()
             }
@@ -61,6 +72,6 @@ private extension MatchListViewController {
         var snapshot = MatchListSnapShot()
         snapshot.appendSections([0])
         snapshot.appendItems(matches)
-        dataSource?.apply(snapshot, animatingDifferences: true)
+        dataSource?.apply(snapshot, animatingDifferences: false)
     }
 }

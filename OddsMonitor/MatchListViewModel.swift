@@ -24,11 +24,19 @@ class MatchListViewModel {
             NSLog("MatchListViewModel fetchData catch error: \(error.localizedDescription)")
         }
     }
+    
+    func subscribeOddsChanges() {
+        MockServer.shared.subscribeWebsocket(delegate: self)
+    }
+    
+    func unsubscribeOddsChanges() {
+        MockServer.shared.unsubscribeWebsocket()
+    }
 }
 
 private extension MatchListViewModel {
-    func prepareData(matchesResponse: [MatchResponse], oddsResponse: [OddResponse]) -> [Match] {
-        var oddsDictionary = [Int: OddResponse]()
+    func prepareData(matchesResponse: [MatchResponse], oddsResponse: [OddsResponse]) -> [Match] {
+        var oddsDictionary = [Int: OddsResponse]()
         oddsResponse.forEach({ oddsDictionary[$0.matchID] = $0 })
         var matches: [Match] = []
         matchesResponse.forEach({ matchResponse in
@@ -38,5 +46,16 @@ private extension MatchListViewModel {
         })
         matches.sort { $0.startTime < $1.startTime }
         return matches
+    }
+}
+
+extension MatchListViewModel: WebSocketDelegate {
+    func didReceive(updatedOdds: OddsResponse) {
+        Task { [weak self] in
+            guard let self else { return }
+            await self.matchStore.updateOdds(updatedOdds)
+            let matches = await self.matchStore.getMatches()
+            self.matchPublisher.send(matches)
+        }
     }
 }
