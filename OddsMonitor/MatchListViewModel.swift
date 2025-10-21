@@ -25,6 +25,12 @@ class MatchListViewModel {
         }
     }
     
+    func getDetailViewModel(for index: Int) -> MatchDetailViewModel? {
+        guard index >= 0 && index < matchPublisher.value.count else { return nil }
+        let match = matchPublisher.value[index]
+        return MatchDetailViewModel(match: match)
+    }
+    
     func subscribeOddsChanges() {
         MockServer.shared.subscribeWebsocket(delegate: self)
     }
