@@ -7,7 +7,7 @@
 
 import Foundation
 
-protocol WebSocketDelegate: AnyObject {
+protocol MockServerDelegate: AnyObject {
     func didReceive(updatedOdds: OddsResponse)
 }
 
@@ -15,7 +15,7 @@ class MockServer {
     static let shared = MockServer()
 
     private var timer: Timer?
-    private weak var delegate: WebSocketDelegate?
+    private weak var delegate: MockServerDelegate?
     
     func getMatches() async throws -> [MatchResponse] {
         let delayTime = UInt64.random(in: 100...300) * 1000 * 1000
@@ -31,7 +31,7 @@ class MockServer {
         return odds
     }
     
-    func subscribeWebsocket(delegate: WebSocketDelegate) {
+    func subscribeWebsocket(delegate: MockServerDelegate) {
         self.delegate = delegate
         timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true, block: { [weak self] _ in
             guard let self else { return }
@@ -45,6 +45,7 @@ class MockServer {
     func unsubscribeWebsocket() {
         timer?.invalidate()
         timer = nil
+        delegate = nil
     }
 }
 

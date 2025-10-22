@@ -20,24 +20,18 @@ class MatchListViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         setupTableView()
         dataBinding()
     }
     
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        viewModel.subscribeOddsChanges()
-    }
-    
-    override func viewDidDisappear(_ animated: Bool) {
-        super.viewDidDisappear(animated)
+    deinit {
         viewModel.unsubscribeOddsChanges()
     }
     
     func setupTableView() {
         tableView.register(UINib(nibName: "\(MatchCell.self)", bundle: nil), forCellReuseIdentifier: "\(MatchCell.self)")
         configureDataSource()
+        tableView.delegate = self
     }
     
     func dataBinding() {
@@ -50,6 +44,7 @@ class MatchListViewController: UIViewController {
                 self?.applySnapshot(matches: matches)
             }
             .store(in: &cancellable)
+        viewModel.subscribeOddsChanges()
     }
 }
 
@@ -73,5 +68,15 @@ private extension MatchListViewController {
         snapshot.appendSections([0])
         snapshot.appendItems(matches)
         dataSource?.apply(snapshot, animatingDifferences: false)
+    }
+}
+
+extension MatchListViewController: UITableViewDelegate {
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        let detailViewModel = viewModel.getDetailViewModel(for: indexPath.row)
+        let controller = MatchDetailViewController()
+        controller.viewModel = detailViewModel
+        navigationController?.pushViewController(controller, animated: true)
     }
 }
