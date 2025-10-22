@@ -32,11 +32,11 @@ class MatchListViewModel {
     }
     
     func subscribeOddsChanges() {
-        MockServer.shared.subscribeWebsocket(delegate: self)
+        WebSocketManager.shared.addDelegate(for: 0, self)
     }
     
     func unsubscribeOddsChanges() {
-        MockServer.shared.unsubscribeWebsocket()
+        WebSocketManager.shared.removeDelegate(for: 0)
     }
 }
 
@@ -55,8 +55,8 @@ private extension MatchListViewModel {
     }
 }
 
-extension MatchListViewModel: WebSocketDelegate {
-    func didReceive(updatedOdds: OddsResponse) {
+extension MatchListViewModel: WebSocketManagerDelegate {
+    func didReceive(id: Int, updatedOdds: OddsResponse) {
         Task { [weak self] in
             guard let self else { return }
             await self.matchStore.updateOdds(updatedOdds)

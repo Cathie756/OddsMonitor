@@ -20,18 +20,11 @@ class MatchListViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         setupTableView()
         dataBinding()
     }
     
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        viewModel.subscribeOddsChanges()
-    }
-    
-    override func viewDidDisappear(_ animated: Bool) {
-        super.viewDidDisappear(animated)
+    deinit {
         viewModel.unsubscribeOddsChanges()
     }
     
@@ -51,6 +44,7 @@ class MatchListViewController: UIViewController {
                 self?.applySnapshot(matches: matches)
             }
             .store(in: &cancellable)
+        viewModel.subscribeOddsChanges()
     }
 }
 

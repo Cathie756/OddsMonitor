@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import Combine
 
 class MatchDetailViewController: UIViewController {
     @IBOutlet weak var teamANameLabel: UILabel!
@@ -14,16 +15,22 @@ class MatchDetailViewController: UIViewController {
     @IBOutlet weak var tableView: UITableView!
     
     var viewModel: MatchDetailViewModel?
+    private var cancellable = Set<AnyCancellable>()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         configureUI()
         setupTableView()
+        dataBinding()
+    }
+    
+    deinit {
+        viewModel?.unsubscribeOddsChanges()
     }
     
     func configureUI() {
-        guard let match = viewModel?.match else { return }
+        guard let match = viewModel?.match.value else { return }
         teamANameLabel.text = match.teamA
         teamBNameLabel.text = match.teamB
         matchTimeLabel.text = match.startTime.toReadableString()
@@ -34,6 +41,16 @@ class MatchDetailViewController: UIViewController {
         tableView.dataSource = self
         tableView.delegate = self
     }
+    
+    func dataBinding() {
+        viewModel?.match
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.tableView.reloadData()
+            }
+            .store(in: &cancellable)
+        viewModel?.subscribeOddsChanges()
+    }
 }
 
 extension MatchDetailViewController: UITableViewDataSource {
@@ -42,7 +59,7 @@ extension MatchDetailViewController: UITableViewDataSource {
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let match = viewModel?.match,
+        guard let match = viewModel?.match.value,
               let cell = tableView.dequeueReusableCell(withIdentifier: "\(MatchDetailCell.self)", for: indexPath) as? MatchDetailCell else {
             return UITableViewCell()
         }

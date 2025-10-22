@@ -6,12 +6,32 @@
 //
 
 import Foundation
+import Combine
 
 class MatchDetailViewModel {
-    var match: Match
+    var match: CurrentValueSubject<Match, Never>
 
     init(match: Match) {
-        self.match = match
+        self.match = CurrentValueSubject<Match, Never>(match)
+    }
+    
+    func subscribeOddsChanges() {
+        WebSocketManager.shared.addDelegate(for: match.value.matchID, self)
+    }
+    
+    func unsubscribeOddsChanges() {
+        WebSocketManager.shared.removeDelegate(for: match.value.matchID)
+    }
+}
+
+extension MatchDetailViewModel: WebSocketManagerDelegate {
+    func didReceive(id: Int, updatedOdds: OddsResponse) {
+        guard match.value.matchID == id else { return }
+        var updatedMatch = match.value
+        updatedMatch.teamAOdds = updatedOdds.teamAOdds
+        updatedMatch.teamBOdds = updatedOdds.teamBOdds
+        updatedMatch.drawOdds = updatedOdds.drawOdds
+        match.send(updatedMatch)
     }
 }
 
