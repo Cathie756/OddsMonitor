@@ -52,7 +52,7 @@ class MatchListViewController: UIViewController {
 private extension MatchListViewController {
     func configureDataSource() {
         let provider: MatchListDataSource.CellProvider = { tableView, indexPath, match -> UITableViewCell? in
-            NSLog("loading row \(indexPath.row) for matchID: \(match.matchID)")
+            NSLog("🎨loading row \(indexPath.row) for matchID: \(match.matchID)")
             guard let cell = tableView.dequeueReusableCell(withIdentifier: "\(MatchCell.self)", for: indexPath) as? MatchCell else {
                 return UITableViewCell()
             }

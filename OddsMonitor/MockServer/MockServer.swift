@@ -32,12 +32,13 @@ class MockServer {
     }
     
     func subscribeWebsocket(delegate: MockServerDelegate) {
+        guard timer == nil, self.delegate == nil else { return }
         self.delegate = delegate
         timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true, block: { [weak self] _ in
             guard let self else { return }
             let matchID = Int.random(in: 1001...1100)
             let newOdds = self.generateOddsMockData(matchID: matchID)
-            NSLog("send update for \(matchID)")
+            NSLog("📣send update for \(matchID)")
             self.delegate?.didReceive(updatedOdds: newOdds)
         })
     }
